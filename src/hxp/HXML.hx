@@ -364,7 +364,14 @@ abstract HXML(Array<String>)
 	**/
 	public function cp(path:String):Void
 	{
-		this.push("-cp \"" + path + "\"");
+		if (path.indexOf(" ") != -1)
+		{
+			this.push("-cp \"" + path + "\"");
+		}
+		else
+		{
+			this.push("-cp " + path);
+		}
 	}
 
 	/**
@@ -1191,6 +1198,7 @@ typedef HXMLConfig =
 		Adds a class path where `.hx` source files or packages (sub-directories) can be found.
 	**/
 	@:optional var cp:Array<String>;
+
 	/**
 		Set current working directory.
 	**/

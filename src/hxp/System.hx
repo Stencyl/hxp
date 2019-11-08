@@ -54,7 +54,7 @@ class System
 			"atf" => false,
 			"psd" => false,
 			"awd" => false,
-			
+
 			"txt" => true,
 			"text" => true,
 			"xml" => true,
@@ -463,7 +463,7 @@ class System
 			}
 		}
 
-		path += "/temp_" + Math.round(0xFFFFFF * Math.random()) + extension;
+		path = Path.combine(path, "temp_" + Math.round(0xFFFFFF * Math.random()) + extension);
 
 		if (FileSystem.exists(path))
 		{
@@ -594,6 +594,15 @@ class System
 
 	public static function mkdir(directory:String):Void
 	{
+		try
+		{
+			if (FileSystem.exists(directory) && FileSystem.isDirectory(directory))
+			{
+				return;
+			}
+		}
+		catch (e:Dynamic) {}
+
 		directory = StringTools.replace(directory, "\\", "/");
 		var total = "";
 
@@ -1390,9 +1399,10 @@ class System
 			switch (hostPlatform)
 			{
 				case WINDOWS:
-					var architecture = Sys.getEnv("PROCESSOR_ARCHITEW6432");
+					var architecture = Sys.getEnv("PROCESSOR_ARCHITECTURE");
+					var wow64Architecture = Sys.getEnv("PROCESSOR_ARCHITEW6432");
 
-					if (architecture != null && architecture.indexOf("64") > -1)
+					if (architecture.indexOf("64") > -1 || wow64Architecture != null && wow64Architecture.indexOf("64") > -1)
 					{
 						_hostArchitecture = X64;
 					}

@@ -1,17 +1,23 @@
 package hxp;
 
 import haxe.io.Bytes;
-import hxp.System;
 #if (lime && lime_cffi && !macro)
 import lime.system.CFFI;
 #end
-import sys.io.Process;
 #if neko
 import neko.Lib;
 #elseif cpp
 import cpp.Lib;
 #elseif cs
 import cs.Lib;
+#elseif hl
+import hl.Api;
+#elseif js
+import js.Browser;
+#end
+#if sys
+import hxp.System;
+import sys.io.Process;
 #end
 
 class Log
@@ -40,19 +46,29 @@ class Log
 				output = "\x1b[31;1mError:\x1b[0m \x1b[1m" + message + "\x1b[0m\n";
 			}
 
+			#if sys
 			Sys.stderr().write(Bytes.ofString(stripColor(output)));
+			#elseif js
+			Browser.console.error(stripColor(output));
+			#else
+			trace(stripColor(output));
+			#end
 		}
 
 		if (verbose && e != null)
 		{
-			#if (js || eval)
-			throw e;
-			#elseif !cs
+			#if (neko || cpp)
 			Lib.rethrow(e);
+			#elseif hl
+			Api.rethrow(e);
+			#else
+			throw e;
 			#end
 		}
 
+		#if sys
 		Sys.exit(1);
+		#end
 	}
 
 	public static function info(message:String, verboseMessage:String = ""):Void
@@ -72,18 +88,31 @@ class Log
 
 	public static function print(message:String):Void
 	{
+		#if sys
 		Sys.print(stripColor(message));
+		#elseif js
+		Browser.console.log(stripColor(message));
+		#else
+		trace(stripColor(message));
+		#end
 	}
 
 	public static function println(message:String):Void
 	{
+		#if sys
 		Sys.println(stripColor(message));
+		#elseif js
+		Browser.console.log(stripColor(message));
+		#else
+		trace(stripColor(message));
+		#end
 	}
 
 	private static function stripColor(output:String):String
 	{
 		if (colorSupported == null)
 		{
+			#if sys
 			if (System.hostPlatform != WINDOWS)
 			{
 				var result = -1;
@@ -150,6 +179,9 @@ class Log
 				}
 				#end
 			}
+			#else
+			colorSupported = false;
+			#end
 		}
 
 		if (enableColor && colorSupported)
@@ -183,7 +215,11 @@ class Log
 			}
 
 			sentWarnings.set(output, true);
+			#if (js && !sys)
+			Browser.console.warn(output);
+			#else
 			println(output);
+			#end
 		}
 	}
 }

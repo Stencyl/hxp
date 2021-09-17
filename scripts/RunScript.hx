@@ -2,6 +2,7 @@ package;
 
 import hxp.InterpHelper;
 import hxp.Log;
+import hxp.System;
 
 class RunScript
 {
@@ -23,7 +24,7 @@ class RunScript
 			}
 		}
 
-		var result:Dynamic = Sys.command(command, args);
+		var result:Dynamic = System.createProcess(command, args);
 
 		if (oldPath != "")
 		{

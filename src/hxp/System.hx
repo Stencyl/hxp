@@ -306,6 +306,39 @@ class System
 		}
 	}
 
+	public static function createProcess(command:String, args:Array<String> = null)
+	{
+		if (args == null) args = [];
+
+		var process = new Process(command, args);
+		
+		var waiting = true;
+
+		while (waiting)
+		{
+			try
+			{
+				Sys.println(process.stdout.readLine());
+			}
+			catch (e:Eof)
+			{
+				waiting = false;
+			}
+		}
+
+		var error = process.stderr.readAll().toString();
+		var result = process.exitCode();
+		
+		if (error != "")
+		{
+			Sys.println(error);
+		}
+		
+		process.close();
+		
+		return result;
+	}
+
 	public static function findTemplate(templatePaths:Array<String>, path:String, warnIfNotFound:Bool = true):String
 	{
 		var matches = findTemplates(templatePaths, path, warnIfNotFound);
@@ -1054,11 +1087,11 @@ class System
 		{
 			if (args != null && args.length > 0)
 			{
-				result = Sys.command(command, args);
+				result = createProcess(command, args);
 			}
 			else
 			{
-				result = Sys.command(command);
+				result = createProcess(command);
 			}
 
 			if (oldPath != "")

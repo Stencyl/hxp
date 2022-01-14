@@ -627,7 +627,10 @@ class System
 		_unknownFileState = false;
 		var ignoredPathsMap:Map<String, Bool> = null;
 		if (pathsToIgnore != null) ignoredPathsMap = [for (pathToIgnore in pathsToIgnore) path + "/" + pathToIgnore => true];
-		_scanFilesRecursively(path, _untouchedFiles, ignoredPathsMap);
+		if (FileSystem.exists(path))
+		{
+			_scanFilesRecursively(path, _untouchedFiles, ignoredPathsMap);
+		}
 	}
 
 	private static function _scanFilesRecursively(path:String, map:Map<String, Bool>, ignorePaths:Map<String, Bool>):Void

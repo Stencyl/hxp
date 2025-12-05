@@ -1459,6 +1459,12 @@ class System
 		#if lime
 		var templatePaths = [Path.combine(Haxelib.getPath(new Haxelib("lime")), "templates")];
 		var node = System.findTemplate(templatePaths, "bin/node/node" + suffix);
+		if (node == null)
+		{
+			// Lime 9 will no longer bundle Node.js executables, so try to use
+			// the system version of Node.js on the PATH.
+			node = "node";
+		}
 		var bin = System.findTemplate(templatePaths, "bin/node/watch/cli-custom.js");
 		#else
 		// TODO: Move to separate lib?
@@ -1468,7 +1474,7 @@ class System
 		var bin = System.findTemplate(watchTemplatePath, "node/watch/cli-custom.js");
 		#end
 
-		if (System.hostPlatform != WINDOWS)
+		if (node != "node" && System.hostPlatform != WINDOWS)
 		{
 			Sys.command("chmod", ["+x", node]);
 		}
@@ -1505,7 +1511,15 @@ class System
 					var architecture = Sys.getEnv("PROCESSOR_ARCHITECTURE");
 					var wow64Architecture = Sys.getEnv("PROCESSOR_ARCHITEW6432");
 
-					if (architecture.indexOf("64") > -1 || wow64Architecture != null && wow64Architecture.indexOf("64") > -1)
+					if (architecture.indexOf("ARM64") > -1)
+					{
+						_hostArchitecture = ARM64;
+					}
+					else if (architecture.indexOf("ARMV7") > -1)
+					{
+						_hostArchitecture = ARMV7;
+					}
+					else if (architecture.indexOf("64") > -1 || wow64Architecture != null && wow64Architecture.indexOf("64") > -1)
 					{
 						_hostArchitecture = X64;
 					}
@@ -1520,6 +1534,9 @@ class System
 					{
 						case "arm":
 							_hostArchitecture = ARMV7;
+
+						case "arm64":
+							_hostArchitecture = ARM64;
 
 						case "x64":
 							_hostArchitecture = X64;
@@ -1541,6 +1558,22 @@ class System
 					else if (output.indexOf("armv7") > -1)
 					{
 						_hostArchitecture = ARMV7;
+					}
+					else if (output.indexOf("arm64") > -1 || output.indexOf("aarch64") > -1 || output.indexOf("armv8l") > -1)
+					{
+						var getconfProcess = new Process("getconf", ["LONG_BIT"]);
+						var getconfOutput = getconfProcess.stdout.readAll().toString();
+						var getconfError = getconfProcess.stderr.readAll().toString();
+						getconfProcess.exitCode();
+						getconfProcess.close();
+						if (StringTools.trim(getconfOutput) == "64")
+						{
+							_hostArchitecture = ARM64;
+						}
+						else
+						{
+							_hostArchitecture = ARMV7;
+						}
 					}
 					else if (output.indexOf("64") > -1)
 					{
